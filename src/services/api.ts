@@ -233,10 +233,6 @@ class ApiService {
 
   // --- Database Download & Export ---
   public async getDatabaseJSON(): Promise<any> {
-    try {
-      const res = await fetch('/safedrive.json?inline=true');
-      if (res.ok) return await res.json();
-    } catch {}
     return this.request('/database/export');
   }
 

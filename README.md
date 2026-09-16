@@ -1,111 +1,139 @@
-# SAFEdrive AI — AI-Powered Real-Time Driver Drowsiness, Fatigue, & Distraction Safety System
+# SafeDrive AI: Real-Time Driver Drowsiness and Distraction Detection Using Computer Vision and Artificial Intelligence
 
 [![License: Academic](https://img.shields.io/badge/License-Academic%20B.Tech-blue.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/Build-Passing-emerald.svg)](#verification--testing)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-19-cyan.svg)](https://react.dev/)
-[![MediaPipe](https://img.shields.io/badge/MediaPipe-Tasks%20Vision-teal.svg)](https://developers.google.com/mediapipe)
+[![Build Status](https://img.shields.io/badge/Build-Passing-emerald.svg)](#testing-and-verification)
 
-SafeDrive AI is an edge-native, real-time driver safety monitoring system that performs continuous computer-vision processing, 3D facial landmark analysis, temporal feature tracking (EAR, MAR, PERCLOS, blinks, yawns, head pose), mobile phone detection, and multimodal risk assessment directly inside the browser.
+## 2. Project Overview
+SafeDrive AI is an edge-native, real-time driver safety monitoring system that performs continuous computer-vision processing, 3D facial landmark analysis, temporal feature tracking, and mobile phone detection directly inside the browser. It fuses these indicators to calculate a real-time risk score and alerts the driver of impending danger.
 
----
+## 3. Problem Statement
+Driver drowsiness and distraction are leading causes of severe road accidents globally. Traditional safety systems are often expensive, proprietary, or require heavy onboard processing. There is a need for an accessible, low-latency, privacy-preserving safety system that can run on consumer hardware to detect fatigue and distraction.
 
-## 🌟 Key Architecture & Capabilities
+## 4. Objectives
+- Provide real-time, zero-latency edge AI detection of driver drowsiness and distraction.
+- Preserve user privacy by processing all webcam frames strictly within the client browser.
+- Deliver an explainable, multimodal risk assessment fusing visual, temporal, and contextual indicators.
+- Offer a robust, cloud-native backend for telemetry and history aggregation.
 
-1. **Client-Side Computer Vision Engine**:
-   - Uses `@mediapipe/tasks-vision` Face Landmarker to extract 478 3D facial landmarks at 30+ FPS.
-   - Primary face selection policy for multi-person vehicles.
-   - No-face safety decay handling (resets timers to prevent false positive microsleep alarms).
+## 5. Key Features
+- **User authentication**: Secure JWT-based registration and login.
+- **Dashboard**: Real-time monitoring and analytics hub.
+- **Browser webcam monitoring**: Zero-upload, local video processing via WebRTC.
+- **Face/landmark detection**: 478-point 3D facial mesh processing.
+- **EAR**: Eye Aspect Ratio tracking.
+- **Blink detection**: Blink counting and duration monitoring.
+- **Eye closure duration**: Detection of dangerous microsleeps.
+- **PERCLOS**: Percentage of Eye Closure over time.
+- **MAR/yawning**: Mouth Aspect Ratio for yawn state machines.
+- **Head pose**: 3D perspective pitch, yaw, and roll tracking.
+- **Distraction detection**: Detection of looking away from the road.
+- **Phone detection**: Real-time object detection for mobile phones.
+- **Temporal analysis**: EMA smoothing and time-windowed tracking.
+- **Risk scoring**: 0-100 calibrated safety risk engine.
+- **Explainable alerts**: Human-readable causes for all high-risk events.
+- **History**: Detailed trip logs and telemetry.
+- **Analytics**: Aggregate safety trends and statistics.
+- **Notifications**: System warnings and alerts.
+- **Settings/profile**: Driver configuration and profile management.
+- **Secure backend**: Hono API with strict JWT validation.
+- **Cloudflare deployment**: Edge-hosted workers and D1 database.
 
-2. **Temporal Feature Engineering (`TemporalFeatureEngine`)**:
-   - Exponential Moving Average (EMA) smoothing for noise reduction.
-   - Rolling 60-second PERCLOS % (Percentage of Eye Closure).
-   - Rolling 60-second Blink Rate counter and prolonged closure detection ($> 400\text{ ms}$ microsleeps).
-   - Continuous yawn state machine ($> 800\text{ ms}$ mouth opening at $MAR > 0.58$).
-   - Perspective-n-Point 3D Head Pose estimation (Pitch, Yaw, Roll).
+## 6. System Architecture
+SafeDrive AI utilizes a client-edge architecture. 
+- The **Client Browser** handles all heavy lifting: WebRTC camera capture, MediaPipe/TF.js model inference, temporal feature engineering, risk fusion, and UI rendering.
+- The **Cloudflare Workers Backend (Hono)** acts as a secure REST API edge server, processing structured telemetry and managing stateless JWT authentication.
+- The **Cloudflare D1 Database** provides globally distributed, relational data storage.
 
-3. **Mobile Phone Distraction Detection (`PhoneDetector`)**:
-   - Real-time COCO-SSD object detection (`cell phone` class) with 3-frame temporal confirmation.
+## 7. Technology Stack
+- **Frontend**: React 19, TypeScript, Vite, TailwindCSS
+- **Computer Vision**: MediaPipe Tasks Vision (Face Landmarker), TensorFlow.js (COCO-SSD)
+- **Backend**: Hono, Cloudflare Workers
+- **Database**: Cloudflare D1 (SQLite)
+- **Machine Learning**: Python, PyTorch, Scikit-Learn (offline training)
 
-4. **Multimodal Risk Fusion Engine (`MultimodalRiskEngine`)**:
-   - Fuses visual geometry, temporal indicators, phone detection, and optional ML predictions into a calibrated 0-100 safety score.
-   - Outputs 4-tier safety risk levels (`LOW`, `MODERATE`, `HIGH`, `CRITICAL`) with human-readable contributing factors.
+## 8. Detection Pipeline
+1. **Camera Input**: Raw frames captured via browser `getUserMedia()`.
+2. **Vision Inference**: Frames processed by MediaPipe (faces) and TF.js (objects).
+3. **Geometric Extraction**: 3D landmarks converted to mathematical ratios (EAR, MAR).
+4. **Temporal Engine**: Instantaneous ratios smoothed via EMA and tracked over rolling 60s windows to determine prolonged states (blinks, yawns, PERCLOS).
 
-5. **Browser ML Runtime (`onnxModelService.ts`)**:
-   - Asynchronous client-side ONNX WebAssembly / TF.js model loader.
-   - Displays clear runtime status badges: `ML MODEL ACTIVE` (when valid ONNX binary is loaded) or `HEURISTIC / FALLBACK MODE` (when running on validated temporal rule engine).
+## 9. Risk Assessment Pipeline
+The Multimodal Risk Engine consumes temporal states and emits a 0-100 score. It applies specific penalty weights for active yawns, high PERCLOS, prolonged eye closures, distracted head poses, and phone usage. The score dictates the risk tier (`LOW`, `MODERATE`, `HIGH`, `CRITICAL`), triggering visual and auditory alerts.
 
-6. **Offline Python Machine Learning Pipeline (`ml/`)**:
-   - Reproducible academic ML pipeline supporting NTHU-DDD, YawDD, and RLDD datasets.
-   - Canonical 10-dimensional feature schema (`feature_schema.py`).
-   - Subject-independent `GroupKFold` driver partitioning (`splitter.py`).
-   - Training-isolated `StandardScaler` preprocessor (`preprocessor.py`).
-   - PyTorch `BaselineMLP` model (`baseline_mlp.py`).
-   - Safety metrics evaluator (`evaluate.py`) calculating FNR, FPR, F1, and ROC-AUC.
-   - ONNX exporter (`export_model.py`).
+## 10. ML Pipeline and CURRENT ML STATUS
+The offline ML pipeline (`ml/`) supports NTHU-DDD, YawDD, and RLDD datasets using a 10-dimensional temporal feature schema, Subject-independent `GroupKFold`, and a PyTorch `BaselineMLP`. 
+**CURRENT STATUS**: The ML training and evaluation infrastructure is fully implemented. However, a final trained production model is currently pending dataset ingestion and training execution.
+**FALLBACK BEHAVIOR**: While a validated ONNX model is unavailable, the application safely falls back to a deterministic, temporal heuristic rule engine to assess drowsiness and distraction with high explainability.
 
----
+## 11. Database Architecture
+Cloudflare D1 provides relational data storage. Data is scoped by user ID, containing tables for `Users`, `Trips`, `Telemetry`, `Events`, `Alerts`, and `Notifications`.
 
-## 🔒 Security & Privacy Engineering
+## 12. Security
+- Passwords hashed via `bcryptjs`.
+- Stateless JWT authentication via HTTP headers.
+- JWT secret supplied securely through environment variables.
+- All API routes are protected and enforce user-scoped database access.
+- No hardcoded demo accounts or plaintext passwords.
+- No raw webcam upload or storage.
+- Sensitive files and secrets excluded from Git.
 
-- **Privacy-by-Design**: All webcam processing occurs strictly in client-side RAM via WebRTC `getUserMedia()`. Zero raw camera frames or videos are uploaded to the backend server.
-- **Password Security**: User passwords hashed with `bcryptjs` (salt rounds = 10).
-- **JWT Authorization**: All protected API endpoints enforce valid Bearer tokens validated against `process.env.JWT_SECRET`.
-- **Database & Route Protection**: Database folder `/data/` protected with HTTP 403 Forbidden. No database JSON dumps exposed in public directories.
+## 13. Privacy
+Privacy by design: 100% of video processing occurs in the client's volatile RAM. No images, videos, or raw biometric point clouds are ever transmitted to the server. The backend only receives abstracted, numeric safety scores.
 
----
+## 14. Project Structure
+- `/src`: React frontend application.
+- `/server`: Hono backend API and logic.
+- `/ml`: Offline Python machine learning pipeline.
+- `/migrations`: D1 database SQL schemas.
+- `/docs`: Comprehensive project documentation.
 
-## 🚦 System Dashboard & User Experience
-
-- **Live Monitoring Hub**: Real-time 478-point mesh overlay, EAR/MAR gauges, head pose compass, phone detection indicator, and live safety risk gauge.
-- **Acoustic & Voice Alerts**: Web Audio API synthesizer + Web Speech API for immediate spoken warnings during high-risk events.
-- **Analytics & History**: Session breakdown, safety trends, event timestamps, driver stats, and notification center.
-
----
-
-## 🛠️ Installation & Execution
-
-### Prerequisites
-- Node.js `v18+` & npm `v9+`
-- Python `v3.10+` (optional, for offline ML training)
-
-### Running the Web Application
+## 15. Local Development Instructions
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Start development server
 npm run dev
-
-# 3. Build production bundle
-npm run build
-
-# 4. Run production server
-npm start
 ```
 
-### Running Automated Verification Tests
+## 16. Environment Variables
+Local development uses `.dev.vars`. Production uses Cloudflare Secrets.
+- `JWT_SECRET`: Secret key for token signing.
+
+## 17. Cloudflare Deployment Instructions
 ```bash
-# Run 18/18 temporal feature & risk engine unit tests
-npx tsx testTemporal.ts
-
-# Run TypeScript compilation check
-npm run lint
-
-# Run Python syntax compilation checks
-python -m py_compile ml/preprocessing/feature_schema.py ml/preprocessing/dataset_adapters.py ml/preprocessing/splitter.py ml/preprocessing/preprocessor.py ml/models/baseline_mlp.py ml/training/train.py ml/evaluation/evaluate.py ml/export/export_model.py
+npm run build
+npx wrangler deploy
 ```
 
----
+## 18. D1 Database Setup/Migration Instructions
+```bash
+# Local development
+npx wrangler d1 migrations apply safedrive-db --local
 
-## 📚 Project Documentation
+# Production
+npx wrangler d1 migrations apply safedrive-db --remote
+```
 
-- [`ARCHITECTURE.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/ARCHITECTURE.md) — System architecture & component diagram.
-- [`VISION_ENGINE.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/VISION_ENGINE.md) — 478-point facial mesh & geometric formulations.
-- [`TEMPORAL_FEATURES.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/TEMPORAL_FEATURES.md) — PERCLOS, blink rate, and yawn state definitions.
-- [`ML_MODEL_CONTRACT.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/ML_MODEL_CONTRACT.md) — 10D feature vector contract & ONNX metadata format.
-- [`ML_TRAINING.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/ML_TRAINING.md) — Academic training manual & reproducibility guidelines.
-- [`DEPLOYMENT.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/DEPLOYMENT.md) — Deployment & production setup guide.
-- [`ml/data/DATASET_VALIDATION.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/ml/data/DATASET_VALIDATION.md) — Dataset availability audit & class mapping.
-- [`ml/preprocessing/FEATURE_COMPATIBILITY.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/ml/preprocessing/FEATURE_COMPATIBILITY.md) — TypeScript vs. Python schema equivalence.
-- [`ml/evaluation/RESULTS.md`](file:///c:/Users/lenovo/Desktop/SafeDrive%20AI/ml/evaluation/RESULTS.md) — Evaluation results & safety metrics protocol.
+## 19. Testing/Verification
+- **TypeScript Linting**: `npm run lint`
+- **Build Verification**: `npm run build`
+- **Temporal Engine Unit Tests**: `npx tsx testTemporal.ts`
+- **Python ML Syntax Checks**: `python -m py_compile ml/preprocessing/...`
+
+## 20. Known Limitations
+- Model inference performance depends on client hardware capabilities.
+- Low-light environments may reduce MediaPipe landmark confidence.
+- ML pipeline requires manual dataset download due to academic licensing.
+
+## 21. Future Work
+- Integration of advanced lightweight vision transformers.
+- Night-vision IR camera support.
+- Fleet management dashboard for enterprise operators.
+
+## 22. Deployment URL
+https://safedrive-ai.naziasultana0430.workers.dev
+
+## 23. GitHub Repository Information
+Repository: Nazia962/SafeDrive-AI
+Description: Real-time driver drowsiness and distraction detection using computer vision, temporal analysis, and AI.
+
+## 24. Academic Disclaimer
+This is an academic/research prototype and is not certified as an automotive safety system or medical diagnostic system. Evaluative benchmarks represent lab-controlled conditions.
