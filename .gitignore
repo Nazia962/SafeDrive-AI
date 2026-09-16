@@ -1,13 +1,23 @@
+# Dependencies
 node_modules/
+
+# Build output
 build/
 dist/
 coverage/
-.DS_Store
-*.log
+
+# Environment and Secrets
 .env*
 !.env.example
+.dev.vars
+secrets.json
+
+# Local Databases and Data
 data/
 safedrive.json
+.wrangler/
+
+# Machine Learning
 ml/data/raw/
 ml/data/processed/
 ml/models/*.pth
@@ -16,3 +26,13 @@ ml/models/*.bin
 ml/models/*.pt
 ml/models/*.pkl
 
+# Media and Recordings
+*.webm
+*.mp4
+*.mkv
+
+# System and Logs
+.DS_Store
+*.log
+tmp/
+temp/
