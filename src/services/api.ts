@@ -54,7 +54,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const errData = await response.json().catch(() => ({ error: response.statusText }));
+      const errData: any = await response.json().catch(() => ({ error: response.statusText }));
       throw new Error(errData.error || `HTTP ${response.status}`);
     }
 

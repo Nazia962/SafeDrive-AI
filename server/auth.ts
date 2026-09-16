@@ -1,47 +1,42 @@
-/**
- * SafeDrive AI - Authentication & Token Security
- */
-
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { db } from './db';
+import { Context, Next } from 'hono';
+import { sign, verify } from 'hono/jwt';
 import type { User } from '../src/types';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('FATAL ERROR: JWT_SECRET environment variable is not set.');
-}
-
-export interface AuthenticatedRequest extends Request {
-  user?: User;
-}
-
-export function generateToken(user: User): string {
-  return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    JWT_SECRET,
-    { expiresIn: '7d' }
+export async function generateToken(user: User, secret: string): Promise<string> {
+  return await sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 // 7 days
+    },
+    secret,
+    'HS256'
   );
 }
 
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-  const authHeader = req.headers.authorization;
+export async function requireAuth(c: Context, next: Next) {
+  const authHeader = c.req.header('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
-    return;
+    return c.json({ error: 'Unauthorized: Missing or invalid token' }, 401);
   }
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string };
-    const user = db.getUserById(decoded.id);
-    if (!user) {
-      res.status(401).json({ error: 'User session expired or not found' });
-      return;
+    const decoded = await verify(token, c.env.JWT_SECRET, 'HS256') as { id: string; email: string };
+    
+    // Check if user exists in DB
+    const { results } = await c.env.safedrive_db.prepare('SELECT id, email, name, role, created_at as createdAt FROM users WHERE id = ?')
+      .bind(decoded.id)
+      .all();
+      
+    if (!results || results.length === 0) {
+      return c.json({ error: 'User session expired or not found' }, 401);
     }
-    req.user = user;
-    next();
+    
+    c.set('user', results[0] as User);
+    await next();
   } catch (err) {
-    res.status(401).json({ error: 'Invalid authentication token' });
+    return c.json({ error: 'Invalid authentication token' }, 401);
   }
 }

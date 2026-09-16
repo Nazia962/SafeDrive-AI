@@ -1,0 +1,17 @@
+{
+  "name": "safedrive-ai",
+  "compatibility_date": "2026-09-16",
+  "main": "server.ts",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "safedrive_db",
+      "database_name": "safedrive-db",
+      "database_id": "ac7d4ed5-08f2-4bbe-87a5-c5bba72207b5",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
