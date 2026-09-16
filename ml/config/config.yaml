@@ -1,0 +1,59 @@
+# SafeDrive AI ML Configuration Blueprint
+
+version: "1.0.0"
+random_seed: 42
+
+dataset:
+  raw_dir: "ml/data/raw"
+  processed_dir: "ml/data/processed"
+  supported_datasets:
+    - "NTHU-DDD"
+    - "YawDD"
+    - "RLDD"
+
+schema:
+  version: "1.0.0"
+  input_dim: 10
+  feature_names:
+    - "current_ear"
+    - "mar"
+    - "eye_closed_duration_sec"
+    - "perclos"
+    - "blink_rate"
+    - "yawn_duration_sec"
+    - "head_pitch"
+    - "head_yaw"
+    - "head_roll"
+    - "phone_confidence"
+
+classes:
+  0: "ALERT"
+  1: "MILD_FATIGUE"
+  2: "SEVERE_FATIGUE"
+  3: "DISTRACTED"
+
+splitting:
+  method: "GroupKFold"
+  n_splits: 5
+  test_size: 0.2
+  val_size: 0.15
+  group_column: "subject_id"
+
+model:
+  type: "MLP"
+  architecture:
+    hidden_dims: [64, 32]
+    activation: "relu"
+    dropout_rate: 0.2
+  training:
+    epochs: 50
+    batch_size: 32
+    learning_rate: 0.001
+    weight_decay: 0.0001
+    early_stopping_patience: 10
+
+export:
+  target_format: "onnx"  # Options: "onnx", "tfjs"
+  opset_version: 13
+  output_dir: "ml/models"
+  export_filename: "safedrive_drowsiness_v1.onnx"

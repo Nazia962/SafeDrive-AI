@@ -1,0 +1,137 @@
+/**
+ * SafeDrive AI - Demonstration & Academic Simulation Scenarios
+ * Explicitly labeled simulation engine for presentation and viva evaluations
+ */
+
+import type { SimulationScenario, SimulationScenarioId } from '../../types';
+
+export const SIMULATION_SCENARIOS: SimulationScenario[] = [
+  {
+    id: 'NORMAL',
+    name: 'Normal Driving',
+    description: 'Driver alert, eyes focused on road forward, balanced EAR, baseline blink frequency.',
+    ear: 0.32,
+    mar: 0.20,
+    perclos: 6.2,
+    pitch: 0,
+    yaw: 0,
+    roll: 0,
+    phoneDetected: false,
+    phoneConfidence: 0.0,
+    roadAttention: 'FOCUSED_ON_ROAD',
+    riskScore: 12,
+    riskLevel: 'LOW'
+  },
+  {
+    id: 'ALERT',
+    name: 'Highly Alert Driver',
+    description: 'Optimal attentiveness, steady gaze forward, zero head droop, PERCLOS under 5%.',
+    ear: 0.35,
+    mar: 0.18,
+    perclos: 3.1,
+    pitch: 1.5,
+    yaw: -0.8,
+    roll: 0.2,
+    phoneDetected: false,
+    phoneConfidence: 0.0,
+    roadAttention: 'FOCUSED_ON_ROAD',
+    riskScore: 6,
+    riskLevel: 'LOW'
+  },
+  {
+    id: 'MILD_FATIGUE',
+    name: 'Mild Driver Fatigue',
+    description: 'Eyelids becoming heavy (EAR ~0.24), slight head droop, blinking slows.',
+    ear: 0.24,
+    mar: 0.32,
+    perclos: 19.4,
+    pitch: -7.0,
+    yaw: 3.5,
+    roll: -1.2,
+    phoneDetected: false,
+    phoneConfidence: 0.0,
+    roadAttention: 'FOCUSED_ON_ROAD',
+    riskScore: 42,
+    riskLevel: 'MODERATE'
+  },
+  {
+    id: 'SEVERE_FATIGUE',
+    name: 'Severe Driver Fatigue',
+    description: 'Frequent prolonged eye closures, high PERCLOS (38%), heavy head drooping.',
+    ear: 0.17,
+    mar: 0.44,
+    perclos: 38.5,
+    pitch: -15.2,
+    yaw: 5.0,
+    roll: -2.8,
+    phoneDetected: false,
+    phoneConfidence: 0.0,
+    roadAttention: 'HEAD_DROOPING',
+    riskScore: 76,
+    riskLevel: 'HIGH'
+  },
+  {
+    id: 'MICROSLEEP',
+    name: 'Microsleep Event (>1.2s)',
+    description: 'Eyes completely shut (EAR 0.10), acute head nod, critical collision danger.',
+    ear: 0.10,
+    mar: 0.24,
+    perclos: 72.0,
+    pitch: -22.5,
+    yaw: -1.5,
+    roll: -4.0,
+    phoneDetected: false,
+    phoneConfidence: 0.0,
+    roadAttention: 'HEAD_DROOPING',
+    riskScore: 94,
+    riskLevel: 'CRITICAL'
+  },
+  {
+    id: 'YAWNING',
+    name: 'Repeated Yawning Episode',
+    description: 'Mouth opens wide (MAR 0.68) exceeding yawn threshold for >1.8s.',
+    ear: 0.25,
+    mar: 0.68,
+    perclos: 16.0,
+    pitch: -4.2,
+    yaw: 2.0,
+    roll: 1.0,
+    phoneDetected: false,
+    phoneConfidence: 0.0,
+    roadAttention: 'FOCUSED_ON_ROAD',
+    riskScore: 62,
+    riskLevel: 'HIGH'
+  },
+  {
+    id: 'PHONE_DISTRACTION',
+    name: 'Mobile Phone Distraction',
+    description: 'Smartphone detected in driver view with downward gaze and diverted attention.',
+    ear: 0.29,
+    mar: 0.21,
+    perclos: 11.0,
+    pitch: -13.5,
+    yaw: -18.0,
+    roll: 2.5,
+    phoneDetected: true,
+    phoneConfidence: 0.94,
+    roadAttention: 'DISTRACTED',
+    riskScore: 84,
+    riskLevel: 'CRITICAL'
+  },
+  {
+    id: 'HEAD_DISTRACTION',
+    name: 'Looking Away (Gaze Distraction)',
+    description: 'Driver turning head to passenger/side window (Yaw 32°) for extended duration.',
+    ear: 0.31,
+    mar: 0.20,
+    perclos: 8.5,
+    pitch: -2.0,
+    yaw: 32.5,
+    roll: 3.2,
+    phoneDetected: false,
+    phoneConfidence: 0.0,
+    roadAttention: 'LOOKING_AWAY',
+    riskScore: 56,
+    riskLevel: 'MODERATE'
+  }
+];

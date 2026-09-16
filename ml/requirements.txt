@@ -1,0 +1,19 @@
+# SafeDrive AI ML Pipeline Dependencies
+# Python >= 3.10 recommended
+
+# Core numerical & data handling
+numpy>=1.24.0
+pyyaml>=6.0
+pandas>=2.0.0
+
+# Machine Learning & Metrics
+scikit-learn>=1.2.0
+torch>=2.0.0
+
+# Model Export & Conversion
+onnx>=1.14.0
+onnxruntime>=1.15.0
+
+# Optional: TensorFlow.js exporter dependencies (if using tfjs export format)
+# tensorflow>=2.12.0
+# tensorflowjs>=4.10.0

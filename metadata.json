@@ -1,0 +1,6 @@
+{
+  "name": "SafeDrive AI",
+  "description": "Real-time AI-powered driver fatigue, drowsiness, head pose, and phone distraction detection platform with multimodal risk fusion and live telemetry.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
